@@ -36,7 +36,7 @@ void valueDown() {
   if (pos[2] == true && camSettings.frame_rate != 0) camSettings.frame_rate--;
   if (pos[3] == true) {
     if (modes.pos == modes.MANUAL_SHUTTER_SPEED && SSCounter != 0)SSCounter--;
-    if (modes.pos == modes.BULB_SHUTTER_SPEED && camSettings.BulbShutterSpeed != 0) camSettings.BulbShutterSpeed--;
+    if (modes.pos == modes.BULB_SHUTTER_SPEED && camSettings.BulbShutterSpeed > 1) camSettings.BulbShutterSpeed--;
   }
   if (pos[4] == true && modes.pos == modes.BULB_SHUTTER_SPEED) camSettings.longExpNR = !camSettings.longExpNR;
   if (pos[5] == true) camSettings.AFControl = !camSettings.AFControl;
@@ -59,15 +59,9 @@ void longPressright() {
 }
 void longPressOK() {
   if (!start) {
-    if (modes.pos == modes.AUTO_SHUTTER_SPEED) {
-      if (camSettings.interval > 0 && camSettings.frame_rate > 0) start = true;
-    } else {
-      if ((camSettings.interval * 1000) > camSettings.shutter_speed && camSettings.frame_rate > 0 && camSettings.shutter_speed > 0 && camSettings.longExpNR == false) start = true;
-      if ((camSettings.interval * 1000) > (camSettings.shutter_speed * 2) && camSettings.frame_rate > 0 && camSettings.shutter_speed > 0 && camSettings.longExpNR == true) start = true;
-    }
+    if (camSettings.interval > 0 && camSettings.frame_rate > 0) start = true;
   } else {
     start = false;
     lr_button = 0;
   }
-  draw();
 }
