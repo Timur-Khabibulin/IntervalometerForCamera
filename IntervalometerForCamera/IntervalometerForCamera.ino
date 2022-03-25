@@ -16,8 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <avr/io.h>
+#include <avr/interrupt.h>
 #include <OneButton.h>
-#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -25,14 +26,14 @@
 #include "Fonts/FreeSans12pt7b.h"
 #include "Fonts/SpecialFont13pixels.h"
 
-#define VERSION 1
+const char  VERSION[] = "1.1.0";
 
 #define SHUTTER_PIN 5    // Пин для подключение кнопки "Спуск"
 #define FOCUS_PIN 6      // Пин для управления фокусировкой
 #define POWER_MODE_PIN 4 // Пин для управления спящим режимом камеры
 
-#define FOCUSE_TIME 1000
-#define TIME_TO_WAKEUP 1500
+#define TIME_TO_WAKEUP_SEC 4
+#define MIN_INTERVAL_FOR_SLEEP_SEC 30
 
 OneButton LEFT_BUTTON(A2, true);
 OneButton RIGHT_BUTTON(A0, true);
@@ -83,12 +84,13 @@ const char* const shutterSpeedLinks[] PROGMEM = {
 };
 const char* switchNames[] = {"OFF", "ON"};
 
-int shutterSpeedValues[] = {1, 2, 4, 8, 10, 17, 33, 50, 100, 125, 200, 500};
+int shutterSpeedValues[] = {1, 2, 4, 8, 10, 17, 33, 50, 100, 125, 200, 500}; // ms
 byte lr_button = 0;
 byte SSCounter;
 bool page2 = false;
 bool pos[MENU_ITEMS_NUM] = {false, false, false, false, false, false, false};
 bool start = false;
+bool startFlag = false;
 
 struct Modes {
   byte pos = 0;
@@ -101,7 +103,7 @@ Modes modes;
 struct CamStruct {
   uint32_t interval;
   int frame_rate;
-  uint32_t BulbShutterSpeed;
+  uint32_t BulbShutterSpeed = 1;
   uint32_t shutter_speed;
   bool canSleep: 1;
   bool hibernationSt: 1;
@@ -110,6 +112,17 @@ struct CamStruct {
   bool longExpNR: 1;
 };
 CamStruct camSettings;
+
+struct hwTimerS {
+  uint32_t timerVal = 0;
+  float PERIOD_SEC;
+  const uint32_t CPU_FREQ_HZ = 16000000;
+  int PRESCALER;
+  volatile uint32_t count = 0;
+  volatile bool state = false;
+};
+hwTimerS hwTimer1;
+hwTimerS hwTimer2;
 
 void setup() {
   LEFT_BUTTON.attachClick(clickleft);
@@ -123,7 +136,6 @@ void setup() {
   pinMode(SHUTTER_PIN, OUTPUT);
   pinMode(FOCUS_PIN, OUTPUT);
   pinMode(POWER_MODE_PIN, OUTPUT);
-  analogReference(INTERNAL);
   logo();
   delay(2000);
 }
@@ -132,20 +144,17 @@ void loop() {
   OK_BUTTON.tick();
   LEFT_BUTTON.tick();
   RIGHT_BUTTON.tick();
-  draw();
-  if (modes.pos == modes.MANUAL_SHUTTER_SPEED) camSettings.shutter_speed = shutterSpeedValues[SSCounter];
-  if (modes.pos == modes.BULB_SHUTTER_SPEED) camSettings.shutter_speed = camSettings.BulbShutterSpeed * 1000;
-  if (start == true) Timer();
+  if (start && !startFlag) Start();
+  if (!start && startFlag) Stop();
   for (byte i = 0; i < MENU_ITEMS_NUM; i++) {
     if (pos[i] == true) {
       page2 = true;
       break;
     } else page2 = false;
   }
-  if (camSettings.camStandby == true && (camSettings.interval - camSettings.shutter_speed) > 10000) camSettings.hibernationSt = true;
+  if (camSettings.camStandby == true && camSettings.interval > MIN_INTERVAL_FOR_SLEEP_SEC) camSettings.hibernationSt = true;
   else camSettings.hibernationSt = false;
-  if (camSettings.hibernationSt == true) hibernation();
-  if (modes.pos != modes.BULB_SHUTTER_SPEED) camSettings.longExpNR = false;
+  draw();
 }
 
 String printFromPGM(const char* const* charMap) {
