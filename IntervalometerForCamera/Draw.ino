@@ -73,7 +73,7 @@ void page_2() {
       display.setCursor(37, 40);
       if (modes.pos != modes.AUTO_SHUTTER_SPEED) {
         if (modes.pos == modes.MANUAL_SHUTTER_SPEED) display.print(printFromPGM(&shutterSpeedLinks[SSCounter]));
-        else if (modes.pos == modes.BULB_SHUTTER_SPEED) display.print(camSettings.shutter_speed / 1000);
+        else if (modes.pos == modes.BULB_SHUTTER_SPEED) display.print(camSettings.BulbShutterSpeed);
       } else errorSSMessgae();
       break;
     case 4:
@@ -90,7 +90,6 @@ void recWindow() {
   display.clearDisplay();
   display.drawLine(0, 38, 128, 38, 1);
   display.drawLine(42, 0, 42, 38, 1);
-  // display.drawLine(95, 0, 95, 38, 1);
   display.drawLine(64, 38, 64, 64, 1);
   display.setFont(&FreeSans9pt7b);
 
@@ -99,7 +98,7 @@ void recWindow() {
     display.print("A");
     display.setCursor(50, 20);
     display.setFont(&SpecialFont13pixels);
-    display.print(F("AUTO SS"));
+    display.print("AUTO SS");
   }
   if (modes.pos == modes.MANUAL_SHUTTER_SPEED) {
     display.setCursor(2, 18);
@@ -111,7 +110,7 @@ void recWindow() {
     display.setCursor(2, 18);
     display.print("B");
     display.setCursor(50, 20);
-    display.print(String(camSettings.shutter_speed / 1000) + " s");
+    display.print(String(camSettings.BulbShutterSpeed) + " s");
   }
   if (camSettings.AFControl == true) {
     display.setFont(&SpecialFont13pixels);
@@ -139,25 +138,20 @@ void recWindow() {
   display.setCursor(25, 60);
   display.print(camSettings.frame_rate);
   display.setFont(&SpecialFont13pixels);
-  /* display.setCursor(100, 14);
-    display.print(BatteryLevel());
-    display.setCursor(100, 29);
-    display.print("%");
-    if (chargeStatus == true) display.drawBitmap(116, 17, BatCharge, BatCharge_width, BatCharge_height, 1);*/
 }
 void endMessgae() {
   display.clearDisplay();
   display.setCursor(30, 13);
-  display.print(F("Shooting"));
+  display.print("Shooting");
   display.setCursor(40, 28);
-  display.print(F("is over"));
+  display.print("is over");
 }
 void errorSSMessgae() {
   display.clearDisplay();
   display.setCursor(25, 15);
-  display.print(F("Disable"));
+  display.print("Disable");
   display.setCursor(10, 40);
-  display.print(F("AutoSS mode"));
+  display.print("AutoSS mode");
   display.display();
   delay(1000);
   pos[lr_button] = false;
@@ -166,24 +160,15 @@ void errorSSMessgae() {
 void errorNRMessage() {
   display.clearDisplay();
   display.setCursor(25, 15);
-  display.print(F("Turn on"));
+  display.print("Turn on");
   display.setCursor(5, 40);
-  display.print(F("BULBSS mode"));
+  display.print("BULBSS mode");
   display.display();
   delay(1000);
   pos[lr_button] = false;
   page2 = false;
 }
 void statusBar() {
-  /* byte posX;
-    if (BatteryLevel() < 100)posX = 107; else posX = 115;
-    display.drawLine(0, 13, 128, 13, 1);
-    display.setFont(&SpecialFont13pixels);
-    display.setCursor(87, 12);
-    display.print(BatteryLevel());
-    display.setCursor(posX, 12);
-    display.print("%");
-    if (chargeStatus == true) display.drawBitmap(78, 1, BatCharge, BatCharge_width, BatCharge_height, 1);*/
   display.drawLine(0, 13, 128, 13, 1);
   display.setTextSize(1);
   display.setCursor(2, 12);
@@ -195,10 +180,10 @@ void logo() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(2, 50);
-  display.print(F("by Timur Khabibulin"));
+  display.print("by Timur Khabibulin");
   display.setFont(&SpecialFont13pixels);
   display.setCursor(0, 20);
-  display.print(F("INTERVALOMETER"));
+  display.print("INTERVALOMETER");
   display.setCursor(40, 40);
   display.print("v -");
   display.setCursor(63, 40);
@@ -245,13 +230,13 @@ void deviceInfo() {
   display.drawLine(0, 20, 128, 20, 1);
   display.setFont(&SpecialFont13pixels);
   display.setCursor(0, 16);
-  display.print(F("INTERVALOMETER"));
+  display.print("INTERVALOMETER");
   display.setCursor(2, 33);
-  display.print(F("Version  -"));
+  display.print("Version  -");
   display.setCursor(80, 33);
   display.print(VERSION);
   display.setCursor(2, 49 );
-  display.print(F("Timur Khabibulin"));
+  display.print("Timur Khabibulin");
   display.setCursor(2, 63);
-  display.print(F("2022"));
+  display.print("2022");
 }
